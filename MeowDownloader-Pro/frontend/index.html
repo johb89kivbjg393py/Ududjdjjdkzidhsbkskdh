@@ -1,15 +1,19 @@
 <script>
+// === MeowDownloader - Cobalt Direct ===
 const COBALT_API = "https://cobalt.canine.tools";
 
 document.getElementById('downloadBtn').addEventListener('click', async () => {
     const urlInput = document.querySelector('input[type="text"]').value.trim();
-    if (!urlInput) return alert("الرجاء لصق رابط الفيديو");
+    if (!urlInput) {
+        return alert("⚠️ الرجاء لصق رابط الفيديو");
+    }
 
-    const activeQuality = document.querySelector('.quality button.active').getAttribute('data-q') || '720';
+    const activeBtn = document.querySelector('.quality button.active');
+    const quality = activeBtn ? activeBtn.getAttribute('data-q') : '720';
 
     const btn = document.getElementById('downloadBtn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = 'جاري التحميل...';
+    btn.innerHTML = '⏳ جاري التحميل...';
     btn.disabled = true;
 
     try {
@@ -18,8 +22,8 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 url: urlInput,
-                videoQuality: activeQuality === '4k' ? '2160' : activeQuality,
-                audioFormat: activeQuality === 'mp3' ? 'mp3' : 'best',
+                videoQuality: quality === '4k' ? '2160' : quality,
+                audioFormat: quality === 'mp3' ? 'mp3' : 'best',
                 filenameStyle: "pretty"
             })
         });
@@ -29,16 +33,18 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
         if (data.status === 'tunnel' || data.status === 'redirect') {
             const a = document.createElement('a');
             a.href = data.url;
-            a.download = data.filename || 'meow-video.mp4';
+            a.download = data.filename || `meow-${Date.now()}.mp4`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
         } else {
-            alert("خطأ: " + (data.error?.code || "غير معروف"));
+            alert("❌ خطأ: " + (data.error?.code || "غير معروف"));
         }
-    } catch (e) {
-        alert("فشل الاتصال، جرب رابط آخر");
+    } catch (err) {
+        alert("❌ فشل الاتصال بالخادم، حاول مرة أخرى");
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
 });
-                  </script>
+</script>
