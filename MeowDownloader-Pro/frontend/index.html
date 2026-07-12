@@ -1,0 +1,44 @@
+<script>
+const COBALT_API = "https://cobalt.canine.tools";
+
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+    const urlInput = document.querySelector('input[type="text"]').value.trim();
+    if (!urlInput) return alert("الرجاء لصق رابط الفيديو");
+
+    const activeQuality = document.querySelector('.quality button.active').getAttribute('data-q') || '720';
+
+    const btn = document.getElementById('downloadBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'جاري التحميل...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${COBALT_API}/api/json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url: urlInput,
+                videoQuality: activeQuality === '4k' ? '2160' : activeQuality,
+                audioFormat: activeQuality === 'mp3' ? 'mp3' : 'best',
+                filenameStyle: "pretty"
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.status === 'tunnel' || data.status === 'redirect') {
+            const a = document.createElement('a');
+            a.href = data.url;
+            a.download = data.filename || 'meow-video.mp4';
+            a.click();
+        } else {
+            alert("خطأ: " + (data.error?.code || "غير معروف"));
+        }
+    } catch (e) {
+        alert("فشل الاتصال، جرب رابط آخر");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+                  </script>
