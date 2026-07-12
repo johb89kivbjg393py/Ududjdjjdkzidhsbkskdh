@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>MeowDownloader Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg: #0a0a0a; --card: #111; --text: #e5e5e5;
+--muted: #888; --accent: #ffffff; --border: #2a2a2a;
+}
+[data-theme="blue"]{--accent:#3b82f6}
+[data-theme="purple"]{--accent:#a855f7}
+[data-theme="green"]{--accent:#22c55e}
+body {
+background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif;
+display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; flex-direction: column; gap: 10px;
+overflow-y: auto; padding: 20px 0;
+}
+#loader-screen {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: var(--bg); z-index: 9999;
+display: flex; flex-direction: column; justify-content: center; align-items: center;
+transition: opacity 0.6s ease, visibility 0.6s;
+}
+.loader-wrap {
+display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.loader-title {
+font-size: 22px; font-weight: 700; color: var(--accent);
+display: flex; align-items: center; gap: 8px;
+text-shadow: 0 0 10px rgba(255,255,255,0.15);
+}
+.loader-bg-bar {
+width: 260px; height: 6px; background: #141414; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+}
+.loader-fill-bar {
+height: 100%; width: 0%; background: var(--accent); border-radius: 10px; transition: width 0.1s linear;
+}
+.loader-percentage {
+font-size: 13px; color: var(--muted); font-weight: 700;
+}
+#main-interface {
+display: flex; flex-direction: column; align-items: center; gap: 10px;
+opacity: 0; transform: scale(0.98);
+transition: opacity 0.6s ease, transform 0.6s ease;
+pointer-events: none;
+}
+.card {
+background: var(--card); padding: 20px 18px; border-radius: 16px;
+width: 340px; border: 1px solid var(--border); position: relative; box-sizing: border-box; z-index: 1;
+}
+.header { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 14px; }
+h1 { font-size: 16px; font-weight: 700; margin: 0; }
+.subtitle { color: var(--muted); font-size: 10px; }
+input {
+width: 100%; padding: 10px 34px 10px 11px;
+border-radius: 8px; border: 1px solid var(--border);
+background: #0a0a0a; color: var(--text); font-size: 12px;
+outline: none; box-sizing: border-box; height: 38px;
+}
+.quality { display: flex; gap: 6px; margin: 11px 0; flex-wrap: wrap; row-gap: 22px; }
+.q-item { flex: 1 1 30%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.quality button {
+width: 100%; padding: 6px 2px 10px 2px; background: transparent;
+border: 1px solid var(--border); border-radius: 7px;
+color: var(--muted); cursor: pointer; font-size: 11px;
+display: flex; align-items: center; justify-content: center; gap: 3px; position: relative;
+}
+.quality button.active { border: 1px solid var(--accent); color: var(--accent); background: #1a1a1a; }
+.btn {
+flex:1; padding: 9px; background: var(--accent);
+border: none; border-radius: 8px; color: black;
+font-size: 13px; font-weight: 700; cursor: pointer;
+display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 9px;
+}
+</style>
+</head>
+<body>
+
+<div id="loader-screen">
+    <div class="loader-wrap">
+        <div class="loader-title">MeowDownloader</div>
+        <div class="loader-bg-bar">
+            <div class="loader-fill-bar" id="loaderFill"></div>
+        </div>
+        <div class="loader-percentage" id="loaderText">جاري الدخول 0%</div>
+    </div>
+</div>
+
+<div id="main-interface">
+    <div class="card">
+        <div class="header">
+            <div>
+                <h1>MeowDownloader Pro</h1>
+                <div class="subtitle">أسرع تحميل فيديوهات</div>
+            </div>
+        </div>
+        <input type="text" id="urlInput" placeholder="الصق رابط الفيديو هنا">
+        <div class="quality" id="qualityWrap">
+            <div class="q-item">
+                <button class="active" data-q="720">720p</button>
+            </div>
+            <div class="q-item">
+                <button data-q="1080">1080p</button>
+            </div>
+            <div class="q-item">
+                <button data-q="mp3">MP3</button>
+            </div>
+        </div>
+        <button class="btn" id="downloadBtn">بدء التحميل</button>
+    </div>
+</div>
+
+<script>
+// تحميل وهمي
+window.addEventListener('load', () => {
+    let count = 0;
+    const loaderFill = document.getElementById('loaderFill');
+    const loaderText = document.getElementById('loaderText');
+    const loaderScreen = document.getElementById('loader-screen');
+    const main = document.getElementById('main-interface');
+
+    const interval = setInterval(() => {
+        count += 5;
+        loaderFill.style.width = count + '%';
+        loaderText.innerText = `جاري الدخول ${count}%`;
+        if (count >= 100) {
+            clearInterval(interval);
+            loaderScreen.style.opacity = '0';
+            setTimeout(() => {
+                loaderScreen.style.display = 'none';
+                main.style.opacity = '1';
+                main.style.pointerEvents = 'auto';
+            }, 600);
+        }
+    }, 80);
+});
+
+// Cobalt API
+const COBALT_API = "https://cobalt.canine.tools";
+
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+    const urlInput = document.getElementById('urlInput').value.trim();
+    if (!urlInput) return alert("الرجاء لصق الرابط");
+
+    const activeBtn = document.querySelector('.quality button.active');
+    const quality = activeBtn ? activeBtn.getAttribute('data-q') : '720';
+
+    const btn = document.getElementById('downloadBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'جاري التحميل...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${COBALT_API}/api/json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url: urlInput,
+                videoQuality: quality === '4k' ? '2160' : quality,
+                audioFormat: quality === 'mp3' ? 'mp3' : 'best',
+                filenameStyle: "pretty"
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.status === 'tunnel' || data.status === 'redirect') {
+            const a = document.createElement('a');
+            a.href = data.url;
+            a.download = data.filename || 'video.mp4';
+            a.click();
+        } else {
+            alert("خطأ: " + (data.error?.code || "غير معروف"));
+        }
+    } catch (e) {
+        alert("فشل الاتصال");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+// جودات
+document.querySelectorAll('.quality button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.quality button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+</script>
+</body>
+</html>
